@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentinelX Security Studio - Audit & Remediation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .glass {
+      background: rgba(17, 24, 39, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col">
+
+  <!-- Header / Navigation -->
+  <header class="glass sticky top-0 z-50 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">
+        SX
+      </div>
+      <div>
+        <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+          SentinelX AI Security Studio
+        </h1>
+        <p class="text-xs text-slate-400">Automated Audit (Red Team) & Remediation (Blue Team) Portal</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 text-xs font-mono">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-slate-300">Backend: <span id="backend-status" class="text-emerald-400 font-semibold">http://localhost:8000</span></span>
+      </div>
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800">
+        <span class="text-slate-300">Model: <span class="text-cyan-400 font-semibold">qwen2.5-coder:7b</span></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+    <!-- Scan Input Card -->
+    <section class="glass rounded-xl p-6 shadow-xl border border-slate-800">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-cyan-400 mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        Target Repository Configuration
+      </h2>
+      <form id="scan-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="md:col-span-2">
+          <label class="block text-xs font-medium text-slate-400 mb-1">Git Repository URL</label>
+          <input type="url" id="repo-url" required placeholder="https://github.com/owner/repo.git"
+            class="w-full px-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Branch</label>
+          <input type="text" id="repo-branch" value="main" required
+            class="w-full px-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+        </div>
+        <div class="flex items-end">
+          <button type="submit" id="btn-start-audit"
+            class="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-sm shadow-lg shadow-cyan-600/30 transition-all flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Start Security Audit
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Progress Timeline & Status -->
+    <section id="progress-container" class="hidden glass rounded-xl p-6 border border-slate-800 space-y-3">
+      <div class="flex items-center justify-between text-xs font-mono">
+        <span id="progress-status-text" class="text-cyan-400 font-semibold animate-pulse">Initializing Security Audit...</span>
+        <span id="progress-percentage" class="text-slate-400">0%</span>
+      </div>
+      <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+        <div id="progress-bar" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 w-0 transition-all duration-300"></div>
+      </div>
+      <!-- Timeline log -->
+      <div id="timeline-logs" class="bg-slate-950/80 rounded-lg p-3 text-xs font-mono text-slate-400 max-h-32 overflow-y-auto custom-scrollbar border border-slate-900 space-y-1">
+      </div>
+    </section>
+
+    <!-- Results Section (Tabs: Vulnerabilities / Blue Team Remediation) -->
+    <section id="results-container" class="hidden space-y-6">
+
+      <!-- Stats Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass p-4 rounded-xl border border-slate-800">
+          <p class="text-xs text-slate-400">Raw Findings</p>
+          <p id="stat-raw-findings" class="text-2xl font-bold text-slate-200 mt-1">0</p>
+        </div>
+        <div class="glass p-4 rounded-xl border border-rose-900/50 bg-rose-950/10">
+          <p class="text-xs text-rose-400">Verified Vulnerabilities</p>
+          <p id="stat-verified-vulns" class="text-2xl font-bold text-rose-400 mt-1">0</p>
+        </div>
+        <div class="glass p-4 rounded-xl border border-emerald-900/50 bg-emerald-950/10">
+          <p class="text-xs text-emerald-400">Patches Applied</p>
+          <p id="stat-patches-applied" class="text-2xl font-bold text-emerald-400 mt-1">0</p>
+        </div>
+        <div class="glass p-4 rounded-xl border border-slate-800">
+          <p class="text-xs text-slate-400">Scan Duration</p>
+          <p id="stat-duration" class="text-2xl font-bold text-cyan-400 mt-1">0.0s</p>
+        </div>
+      </div>
+
+      <!-- Action & View Header -->
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-slate-200">Audit & Fix Workspace</h3>
+        <button id="btn-run-blue-team"
+          class="py-2 px-5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold tracking-wide shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Trigger AI Blue Team (Auto-Fix All)
+        </button>
+      </div>
+
+      <!-- Main Panels -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Red Team Panel: Verified Vulnerabilities -->
+        <div class="glass rounded-xl p-5 border border-slate-800 flex flex-col h-[650px]">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+            <h4 class="text-sm font-bold text-rose-400 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+              Red Team Audit Findings
+            </h4>
+            <span id="badge-vuln-count" class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-rose-950 text-rose-300 border border-rose-800">0 Items</span>
+          </div>
+
+          <div id="vulnerabilities-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+            <div class="text-center py-12 text-slate-500 text-xs">No vulnerabilities loaded yet.</div>
+          </div>
+        </div>
+
+        <!-- Blue Team Panel: Patches & Developer Notes -->
+        <div class="glass rounded-xl p-5 border border-slate-800 flex flex-col h-[650px]">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+            <h4 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              Blue Team Developer Patch Notes
+            </h4>
+            <span id="badge-patch-count" class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950 text-emerald-300 border border-emerald-800">0 Patches</span>
+          </div>
+
+          <div id="patches-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+            <div class="text-center py-12 text-slate-500 text-xs">Run Blue Team auto-fix to generate developer notes and unified diffs.</div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script>
+    const BACKEND_URL = (window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : "http://localhost:8000";
+    document.addEventListener("DOMContentLoaded", () => {
+      const statusEl = document.getElementById("backend-status");
+      if (statusEl) statusEl.innerText = BACKEND_URL;
+    });
+
+    const scanForm = document.getElementById("scan-form");
+    const repoUrlInput = document.getElementById("repo-url");
+    const repoBranchInput = document.getElementById("repo-branch");
+    const btnStartAudit = document.getElementById("btn-start-audit");
+    const btnRunBlueTeam = document.getElementById("btn-run-blue-team");
+
+    const progressContainer = document.getElementById("progress-container");
+    const progressStatusText = document.getElementById("progress-status-text");
+    const progressPercentage = document.getElementById("progress-percentage");
+    const progressBar = document.getElementById("progress-bar");
+    const timelineLogs = document.getElementById("timeline-logs");
+
+    const resultsContainer = document.getElementById("results-container");
+    const statRawFindings = document.getElementById("stat-raw-findings");
+    const statVerifiedVulns = document.getElementById("stat-verified-vulns");
+    const statPatchesApplied = document.getElementById("stat-patches-applied");
+    const statDuration = document.getElementById("stat-duration");
+
+    const vulnerabilitiesList = document.getElementById("vulnerabilities-list");
+    const patchesList = document.getElementById("patches-list");
+    const badgeVulnCount = document.getElementById("badge-vuln-count");
+    const badgePatchCount = document.getElementById("badge-patch-count");
+
+    let currentReport = null;
+    let currentRemediationReport = null;
+
+    function logTimeline(message, type = "info") {
+      const timeStr = new Date().toLocaleTimeString();
+      const div = document.createElement("div");
+      const colorClass = type === "error" ? "text-rose-400" : type === "success" ? "text-emerald-400" : "text-slate-300";
+      div.className = `${colorClass} flex items-start gap-2`;
+      div.innerHTML = `<span class="text-slate-500">[${timeStr}]</span> <span>${message}</span>`;
+      timelineLogs.appendChild(div);
+      timelineLogs.scrollTop = timelineLogs.scrollHeight;
+    }
+
+    function setProgress(pct, text) {
+      progressBar.style.width = `${pct}%`;
+      progressPercentage.innerText = `${pct}%`;
+      progressStatusText.innerText = text;
+    }
+
+    // Handle Security Audit Form Submit
+    scanForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const repoUrl = repoUrlInput.value.trim();
+      const branch = repoBranchInput.value.trim() || "main";
+
+      progressContainer.classList.remove("hidden");
+      resultsContainer.classList.add("hidden");
+      timelineLogs.innerHTML = "";
+      vulnerabilitiesList.innerHTML = "";
+      patchesList.innerHTML = "";
+      btnStartAudit.disabled = true;
+
+      logTimeline(`Initiating security audit for ${repoUrl} (branch: ${branch})...`);
+      setProgress(10, "Cloning & Analyzing Repository...");
+
+      try {
+        // Stream SSE updates
+        const eventSource = new EventSource(`${BACKEND_URL}/api/v1/audit/scan/stream?repo_url=${encodeURIComponent(repoUrl)}&branch=${encodeURIComponent(branch)}`);
+
+        eventSource.addEventListener("RECON_STARTED", (e) => {
+          const data = JSON.parse(e.data);
+          setProgress(25, data.message || "Recon phase active...");
+          logTimeline(data.message || "Recon agent started");
+        });
+
+        eventSource.addEventListener("SCANNERS_RUNNING", (e) => {
+          const data = JSON.parse(e.data);
+          setProgress(50, "Running static scanners (Semgrep, Gitleaks, Trivy)...");
+          logTimeline(data.message || "Static scanners running");
+        });
+
+        eventSource.addEventListener("AI_TRIAGE_ACTIVE", (e) => {
+          const data = JSON.parse(e.data);
+          setProgress(75, "AI Triage evaluating false positives with qwen2.5-coder:7b...");
+          logTimeline(data.message || "AI triage active");
+        });
+
+        eventSource.addEventListener("REPORT_READY", (e) => {
+          const payload = JSON.parse(e.data);
+          currentReport = payload.data;
+          eventSource.close();
+          setProgress(100, "Audit complete!");
+          logTimeline("Security audit report generated successfully.", "success");
+          btnStartAudit.disabled = false;
+          renderAuditReport(currentReport);
+        });
+
+        eventSource.onerror = async (err) => {
+          eventSource.close();
+          logTimeline("SSE Stream disconnected. Fetching audit via POST endpoint...", "error");
+          // Fallback to POST
+          try {
+            const res = await fetch(`${BACKEND_URL}/api/v1/audit/scan`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ repo_url: repoUrl, branch })
+            });
+            if (!res.ok) {
+              const errText = await res.text();
+              throw new Error(`Server returned HTTP ${res.status}: ${errText.slice(0, 150)}`);
+            }
+            currentReport = await res.json();
+            setProgress(100, "Audit complete!");
+            logTimeline("Audit report retrieved successfully via REST fallback.", "success");
+            renderAuditReport(currentReport);
+          } catch (postErr) {
+            logTimeline(`Failed to complete audit: ${postErr.message}`, "error");
+          } finally {
+            btnStartAudit.disabled = false;
+          }
+        };
+
+      } catch (err) {
+        logTimeline(`Audit error: ${err.message}`, "error");
+        btnStartAudit.disabled = false;
+      }
+    });
+
+    function renderAuditReport(report) {
+      resultsContainer.classList.remove("hidden");
+      statRawFindings.innerText = report.total_raw_findings;
+      statVerifiedVulns.innerText = report.verified_vulnerabilities.length;
+      statPatchesApplied.innerText = "0";
+      statDuration.innerText = `${report.scan_duration_sec}s`;
+
+      badgeVulnCount.innerText = `${report.verified_vulnerabilities.length} Items`;
+
+      if (report.verified_vulnerabilities.length === 0) {
+        vulnerabilitiesList.innerHTML = `<div class="text-center py-12 text-slate-400 text-xs">No verified security vulnerabilities found in repository!</div>`;
+        return;
+      }
+
+      vulnerabilitiesList.innerHTML = report.verified_vulnerabilities.map(v => `
+        <div class="bg-slate-900/90 rounded-lg p-4 border border-slate-800 space-y-2">
+          <div class="flex items-start justify-between">
+            <h5 class="font-bold text-sm text-slate-100">${v.title}</h5>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
+              v.severity === 'CRITICAL' ? 'bg-rose-950 text-rose-400 border border-rose-800' :
+              v.severity === 'HIGH' ? 'bg-amber-950 text-amber-400 border border-amber-800' :
+              'bg-blue-950 text-blue-400 border border-blue-800'
+            }">${v.severity}</span>
+          </div>
+
+          <div class="text-xs font-mono text-slate-400 flex items-center gap-3">
+            <span>Source: <strong class="text-slate-300">${v.scanner_source}</strong></span>
+            <span>CWE: <strong class="text-cyan-400">${v.cwe_id || 'N/A'}</strong></span>
+            <span>File: <strong class="text-slate-300">${v.file_path}:${v.line_number || 1}</strong></span>
+          </div>
+
+          <p class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded border border-slate-800/80">
+            ${v.root_cause_analysis || 'No detailed analysis.'}
+          </p>
+
+          <div class="bg-slate-950 rounded p-2 text-[11px] font-mono text-slate-400 overflow-x-auto border border-slate-900">
+            <pre>${escapeHtml(v.raw_snippet)}</pre>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Handle Blue Team Auto-Fix
+    btnRunBlueTeam.addEventListener("click", async () => {
+      if (!currentReport || !currentReport.verified_vulnerabilities.length) {
+        alert("No verified vulnerabilities to patch.");
+        return;
+      }
+
+      btnRunBlueTeam.disabled = true;
+      progressContainer.classList.remove("hidden");
+      logTimeline("Triggering Blue Team Self-Healing Remediation Agent...", "info");
+      setProgress(10, "Generating Secure Patches & Diff Notes...");
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/remediation/patch`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            repo_path: currentReport.repo_url,
+            auto_apply: true,
+            create_git_branch: true,
+            branch_name: "sentinelx/security-patches",
+            findings: currentReport.verified_vulnerabilities
+          })
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Server returned HTTP ${res.status}: ${errText.slice(0, 150)}`);
+        }
+
+        currentRemediationReport = await res.json();
+        setProgress(100, "Remediation & Patching Complete!");
+        logTimeline(`Generated ${currentRemediationReport.total_successful} developer patch(es) & diff notes successfully!`, "success");
+
+        renderRemediationReport(currentRemediationReport);
+
+      } catch (err) {
+        logTimeline(`Remediation error: ${err.message}`, "error");
+      } finally {
+        btnRunBlueTeam.disabled = false;
+      }
+    });
+
+    function renderRemediationReport(remediationReport) {
+      statPatchesApplied.innerText = remediationReport.total_successful;
+      badgePatchCount.innerText = `${remediationReport.patches.length} Patches`;
+
+      patchesList.innerHTML = remediationReport.patches.map(p => `
+        <div class="bg-slate-900/90 rounded-lg p-4 border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-bold text-slate-200">${p.file_path}</span>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded ${
+              p.syntax_valid ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'
+            }">${p.syntax_valid ? 'SYNTAX VERIFIED' : 'SYNTAX ERROR'}</span>
+          </div>
+
+          <!-- Developer Note -->
+          <div class="bg-slate-950 p-3 rounded border border-slate-800/80 text-xs space-y-1.5">
+            <p class="font-bold text-cyan-400">Developer Patch Note</p>
+            <p class="text-slate-300"><strong>Summary:</strong> ${p.developer_note.summary || 'N/A'}</p>
+            <p class="text-slate-300"><strong>Root Cause:</strong> ${p.developer_note.root_cause || 'N/A'}</p>
+            <p class="text-slate-300"><strong>Remediation:</strong> ${p.developer_note.remediation_applied || 'N/A'}</p>
+            <p class="text-slate-300"><strong>Verification Steps:</strong> ${p.developer_note.verification_steps || 'N/A'}</p>
+          </div>
+
+          <!-- Git Diff -->
+          <div>
+            <p class="text-[11px] font-mono text-slate-400 mb-1">Unified Git Diff:</p>
+            <div class="bg-slate-950 rounded p-2.5 text-[11px] font-mono overflow-x-auto border border-slate-900 text-slate-300">
+              <pre>${formatGitDiff(p.git_diff)}</pre>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function formatGitDiff(diffStr) {
+      if (!diffStr) return '';
+      return diffStr.split('\n').map(line => {
+        if (line.startsWith('+') && !line.startsWith('+++')) {
+          return `<span class="text-emerald-400">${escapeHtml(line)}</span>`;
+        } else if (line.startsWith('-') && !line.startsWith('---')) {
+          return `<span class="text-rose-400">${escapeHtml(line)}</span>`;
+        } else if (line.startsWith('@@')) {
+          return `<span class="text-cyan-400 font-bold">${escapeHtml(line)}</span>`;
+        }
+        return escapeHtml(line);
+      }).join('\n');
+    }
+  </script>
+</body>
+</html>
