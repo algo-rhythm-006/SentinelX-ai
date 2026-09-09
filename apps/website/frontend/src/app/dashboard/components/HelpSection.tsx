@@ -6,28 +6,31 @@ import { HelpCircle, ArrowRight, BookOpen } from "lucide-react";
 export default function HelpSection() {
   return (
     <section className="w-full">
-      <div className="rounded-2xl bg-gradient-to-r from-[#0D0F0D] via-[#050505] to-[#0D0F0D] border border-white/10 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center text-[#B7FF00] shrink-0">
-            <HelpCircle className="w-6 h-6" />
+      <div className="rounded-none bg-panel border border-white/10 p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+        <div className="absolute inset-x-0 bottom-0 h-0.5 bg-lime scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
+        
+        <div className="flex items-start gap-6 relative z-10">
+          <div className="w-12 h-12 rounded-none bg-ink border border-white/10 flex items-center justify-center text-lime shrink-0 group-hover:border-lime/30 group-hover:scale-110 transition-all shadow-[0_0_15px_rgba(183,255,0,0)] group-hover:shadow-[0_0_15px_rgba(183,255,0,0.15)]">
+            <HelpCircle className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="font-display text-xl font-bold text-[#F5F5F0]">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-fog uppercase tracking-tight">
               Need Help?
             </h2>
-            <p className="mt-1 text-sm text-[#9CA3AF]">
-              Follow the setup guide to get Sentinel-X running on your system.
+            <p className="mt-2 text-xs font-mono text-ash tracking-wider">
+              Follow the setup guide to securely initialize Sentinel-X on your system.
             </p>
           </div>
         </div>
 
         <Link
           href="/docs/setup"
-          className="inline-flex items-center gap-2 bg-[#121212] border border-white/10 hover:border-[#B7FF00]/40 hover:bg-white/5 text-[#F5F5F0] font-mono text-xs font-bold uppercase tracking-wider py-3.5 px-6 rounded-xl transition-all hover:text-[#B7FF00] cursor-pointer whitespace-nowrap"
+          className="relative z-10 inline-flex items-center gap-3 bg-ink border border-white/10 text-fog font-mono text-[10px] font-bold uppercase tracking-[0.2em] py-4 px-8 rounded-none transition-all hover:text-lime hover:border-lime/50 cursor-pointer whitespace-nowrap overflow-hidden group/btn"
         >
-          <BookOpen className="w-4 h-4" />
-          <span>View Setup Guide</span>
-          <ArrowRight className="w-4 h-4" />
+          <span className="absolute inset-0 w-full h-full bg-lime/10 -translate-x-full group-hover/btn:animate-[flow-x_1.8s_linear_infinite]" />
+          <BookOpen className="w-4 h-4 relative z-10" />
+          <span className="relative z-10">View Setup Guide</span>
+          <ArrowRight className="w-4 h-4 relative z-10" />
         </Link>
       </div>
     </section>
