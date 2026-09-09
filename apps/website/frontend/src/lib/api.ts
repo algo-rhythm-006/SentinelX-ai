@@ -1,7 +1,11 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export async function apiFetch<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const url = endpoint.startsWith('http')
+    ? endpoint
+    : endpoint.startsWith('/api/auth')
+    ? endpoint
+    : `${API_BASE_URL}${endpoint}`;
   
   const headers = {
     'Content-Type': 'application/json',
