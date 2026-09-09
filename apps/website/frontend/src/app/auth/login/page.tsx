@@ -34,7 +34,7 @@ function LoginForm() {
     setLoading(true);
     try {
       await authApi.login(email, password);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       if (err.message && err.message.includes("verify your email")) {
         setUnverifiedEmail(email);

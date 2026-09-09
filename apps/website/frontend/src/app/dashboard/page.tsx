@@ -1,0 +1,13 @@
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+import DashboardClient from "./DashboardClient";
+
+export default async function DashboardPage() {
+  const session = await getSession();
+
+  if (!session || !session.email) {
+    redirect("/auth/login");
+  }
+
+  return <DashboardClient user={{ email: session.email }} />;
+}
