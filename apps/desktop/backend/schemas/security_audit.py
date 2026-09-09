@@ -2,7 +2,7 @@ from typing import Optional, Any
 from pydantic import BaseModel, HttpUrl, Field
 
 class ScanRequest(BaseModel):
-    repo_url: HttpUrl
+    repo_url: str
     branch: Optional[str] = "main"
 
 class VulnerabilityFinding(BaseModel):
