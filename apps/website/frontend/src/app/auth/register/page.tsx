@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authApi } from "@/lib/api";
 import { User, Mail, Lock, ArrowRight, Shield } from "lucide-react";
+import { BlobCard } from "../../../ui/blob-card";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -47,14 +48,20 @@ export default function RegisterPage() {
       {/* Background radial glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(183,255,0,0.04)_0%,transparent_60%)] pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-xl">
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-12 h-12 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center mb-3">
-            <Shield className="w-6 h-6 text-[#B7FF00]" />
+      <BlobCard 
+        className="max-w-md mx-auto"
+        headerHeight={200}
+        header={
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center mb-3">
+              <Shield className="w-6 h-6 text-[#B7FF00]" />
+            </div>
+            <h1 className="font-display text-2xl font-bold tracking-tight">Create Sentinel-X Account</h1>
+            <p className="text-xs text-[#9CA3AF] mt-1 font-mono uppercase tracking-wider">Predict. Fight. Heal.</p>
           </div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Create Sentinel-X Account</h1>
-          <p className="text-xs text-[#9CA3AF] mt-1 font-mono uppercase tracking-wider">Predict. Fight. Heal.</p>
-        </div>
+        }
+      >
+        <div className="p-8 pt-4">
 
         {error && (
           <div className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono">
@@ -123,7 +130,8 @@ export default function RegisterPage() {
             Log In
           </Link>
         </div>
-      </div>
+        </div>
+      </BlobCard>
     </main>
   );
 }

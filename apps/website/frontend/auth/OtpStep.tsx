@@ -113,7 +113,7 @@ export default function OtpStep({ email, onVerify, onChangeEmail, onSuccessCompl
     };
 
     return (
-        <div className="flex flex-col items-center w-full bg-panel/40 p-8 pt-10 rounded-[28px] border border-border/40 shadow-2xl backdrop-blur-md overflow-hidden relative min-h-[380px] max-w-sm mx-auto">
+        <div className="flex flex-col items-center w-full relative min-h-[280px] mx-auto">
             {/* Header Area */}
             <div className="relative w-full h-[100px] mb-6 flex justify-center text-center">
                 <AnimatePresence mode="wait">

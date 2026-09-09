@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authApi } from "@/lib/api";
 import { Mail, Lock, ArrowRight, Shield, AlertTriangle } from "lucide-react";
+import { BlobCard } from "../../../ui/blob-card";
 
 function LoginForm() {
   const router = useRouter();
@@ -47,20 +48,25 @@ function LoginForm() {
   };
 
   return (
-    <div className="relative z-10 w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-xl">
-      <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-12 h-12 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center mb-3">
-          <Shield className="w-6 h-6 text-[#B7FF00]" />
+    <BlobCard 
+      className="max-w-md mx-auto"
+      headerHeight={200}
+      header={
+        <div className="flex flex-col items-center text-center">
+          <div className="w-12 h-12 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center mb-3">
+            <Shield className="w-6 h-6 text-[#B7FF00]" />
+          </div>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Log in to Sentinel-X</h1>
+          <p className="text-xs text-[#9CA3AF] mt-1 font-mono uppercase tracking-wider">Predict. Fight. Heal.</p>
         </div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">Log in to Sentinel-X</h1>
-        <p className="text-xs text-[#9CA3AF] mt-1 font-mono uppercase tracking-wider">Predict. Fight. Heal.</p>
-      </div>
-
-      {searchParams.get("verified") === "true" && !error && (
-        <div className="mb-6 p-3 rounded-lg bg-[#B7FF00]/10 border border-[#B7FF00]/20 text-[#B7FF00] text-xs font-mono text-center">
-          Email verified successfully! Please log in below.
-        </div>
-      )}
+      }
+    >
+      <div className="p-8 pt-4">
+        {searchParams.get("verified") === "true" && !error && (
+          <div className="mb-6 p-3 rounded-lg bg-[#B7FF00]/10 border border-[#B7FF00]/20 text-[#B7FF00] text-xs font-mono text-center">
+            Email verified successfully! Please log in below.
+          </div>
+        )}
 
       {error && (
         <div className="mb-6 p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono flex flex-col gap-2">
@@ -125,7 +131,8 @@ function LoginForm() {
           Create Account
         </Link>
       </div>
-    </div>
+      </div>
+    </BlobCard>
   );
 }
 
