@@ -1,4 +1,4 @@
-package com.sentinal.website;
+package com.sentinel.website;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

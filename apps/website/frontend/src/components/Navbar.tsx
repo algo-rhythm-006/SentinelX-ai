@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Shield, Menu, X, ArrowRight, User, LogOut, Server } from "lucide-react";
+import { Shield, Menu, X, ArrowRight, User, LogOut, Server, Download } from "lucide-react";
 import { SiGithub as Github } from "react-icons/si";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 
@@ -149,7 +149,7 @@ const Navbar = ({ onScan }: any) => {
                                 onClick={onScan}
                                 className="hidden sm:inline-flex items-center gap-2 bg-[#B7FF00] text-[#050505] rounded-full font-mono text-[10px] sm:text-[11px] font-bold tracking-wider px-4 sm:px-5 py-2 sm:py-2.5 hover:bg-[#cfff4d] hover:scale-105 transition-all"
                             >
-                                LOGIN <ArrowRight size={12} />
+                                DOWNLOAD NOW <Download size={12} />
                             </button>
                         )}
 
@@ -211,7 +211,7 @@ const Navbar = ({ onScan }: any) => {
                                 }}
                                 className="mt-6 flex items-center justify-center gap-2 rounded-full bg-[#B7FF00] text-[#050505] font-mono text-xs font-bold tracking-wider px-6 py-4 self-start hover:bg-[#cfff4d]"
                             >
-                                LOGIN <ArrowRight size={14} />
+                                DOWNLOAD NOW <Download size={14} />
                             </button>
                         ))}
                     </nav>
